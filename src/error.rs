@@ -13,105 +13,62 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
-use failure::{Backtrace, Context, Fail};
-use std::fmt::{self, Display};
+//use failure::{Backtrace, Context, Fail};
 use std::io;
-
-/// Error type
-#[derive(Debug)]
-pub struct Error {
-	inner: Context<ErrorKind>,
-}
+use thiserror::Error;
 
 /// Possible errors encountered while creating daemon
-#[derive(Fail, Debug)]
-pub enum ErrorKind {
-	/// Call to pipe failed
-	#[fail(display = "Call to pipe failed: {}", _0)]
-	Pipe(io::Error),
+#[derive(Error, Debug)]
+pub enum Error {
+    /// Call to pipe failed
+    #[error("Call to pipe failed: {0}")]
+    Pipe(io::Error),
 
-	/// Couldn't fork daemon process
-	#[fail(display = "Couldn't fork daemon process: {}", _0)]
-	Fork(io::Error),
+    /// Couldn't fork daemon process
+    #[error("Couldn't fork daemon process: {0}")]
+    Fork(io::Error),
 
-	/// Couldn't redirect stdio streams
-	#[fail(display = "Couldn't redirect stdio streams: {}", _0)]
-	Dup2(io::Error),
+    /// Couldn't redirect stdio streams
+    #[error("Couldn't redirect stdio streams: {0}")]
+    Dup2(io::Error),
 
-	/// Unable to create new session
-	#[fail(display = "Unable to create new session: {}", _0)]
-	DetachSession(io::Error),
+    /// Unable to create new session
+    #[error("Unable to create new session: {0}")]
+    DetachSession(io::Error),
 
-	/// Unable to change directory
-	#[fail(display = "Unable to change directory")]
-	ChangeDirectory,
+    /// Unable to change directory
+    #[error("Unable to change directory")]
+    ChangeDirectory,
 
-	/// pid_file option contains NUL
-	#[fail(display = "pid_file option contains NUL")]
-	PathContainsNul,
+    /// pid_file option contains NUL
+    #[error("pid_file option contains NUL")]
+    PathContainsNul,
 
-	/// Unable to open pid file
-	#[fail(display = "Unable to open pid file, {}", _0)]
-	OpenPidfile(io::Error),
+    /// Unable to open pid file
+    #[error("Unable to open pid file, {0}")]
+    OpenPidfile(io::Error),
 
-	/// Unable to write self pid to pid file
-	#[fail(display = "Unable to write self pid to pid file {}", _0)]
-	WritePid(io::Error),
+    /// Unable to write self pid to pid file
+    #[error("Unable to write self pid to pid file {0}")]
+    WritePid(io::Error),
 
-	/// failed to register pipe fd's with mio
-	#[fail(display = "Unable to register pipe with mio: {}", _0)]
-	RegisterationError(io::Error),
+    /// failed to register pipe fd's with mio
+    #[error("Unable to register pipe with mio: {0}")]
+    RegisterationError(io::Error),
 
-	/// splice returned an error
-	#[fail(display = "Unable to splice streams: {}", _0)]
-	SpliceError(io::Error),
+    /// splice returned an error
+    #[error("Unable to splice streams: {0}")]
+    SpliceError(io::Error),
 
-	/// couldn't get the pending datasize from ioctl
-	#[fail(display = "Unable to fetch pending datasize from ioctl: {}", _0)]
-	Ioctl(io::Error),
+    /// couldn't get the pending datasize from ioctl
+    #[error("Unable to fetch pending datasize from ioctl: {0}")]
+    Ioctl(io::Error),
 
-	/// fnctl operations failed
-	#[fail(display = "{}", _0)]
-	Fnctl(io::Error),
+    /// fnctl operations failed
+    #[error("{0}")]
+    Fnctl(io::Error),
 
-	/// attempted to daemonize on an unsupported platform
-	#[fail(display = "Daemonize on the current platform is not supported")]
-	UnsupportedPlatform
-}
-
-impl Fail for Error {
-	fn cause(&self) -> Option<&Fail> {
-		self.inner.cause()
-	}
-
-	fn backtrace(&self) -> Option<&Backtrace> {
-		self.inner.backtrace()
-	}
-}
-
-impl Display for Error {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		Display::fmt(&self.inner, f)
-	}
-}
-
-impl Error {
-	/// extract the error kind
-	pub fn kind(&self) -> &ErrorKind {
-		self.inner.get_context()
-	}
-}
-
-impl From<ErrorKind> for Error {
-	fn from(kind: ErrorKind) -> Error {
-		Error {
-			inner: Context::new(kind),
-		}
-	}
-}
-
-impl From<Context<ErrorKind>> for Error {
-	fn from(inner: Context<ErrorKind>) -> Error {
-		Error { inner }
-	}
+    /// attempted to daemonize on an unsupported platform
+    #[error("Daemonize on the current platform is not supported")]
+    UnsupportedPlatform,
 }

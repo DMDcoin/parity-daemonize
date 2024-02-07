@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
 use std::path::PathBuf;
 
 pub mod error;
@@ -29,37 +29,35 @@ type Result<T> = std::result::Result<T, Error>;
 /// this can be useful, as the daemon will pipe it's stdout/stderr to the parent process
 /// to communicate if start up was successful
 pub trait AsHandle {
-	type Fd;
+    type Fd;
 
-	/// Creates a `Handle` from a raw file descriptor
-	fn from_fd(fd: Self::Fd) -> Self;
+    /// Creates a `Handle` from a raw file descriptor
+    fn from_fd(fd: Self::Fd) -> Self;
 
-	/// Detach the daemon from the parent process
-	/// this will write "Daemon started successfully" to stdout
-	/// before detaching
-	///
-	/// # panics
-	/// if detach is called more than once
-	fn detach(&mut self);
+    /// Detach the daemon from the parent process
+    /// this will write "Daemon started successfully" to stdout
+    /// before detaching
+    ///
+    /// # panics
+    /// if detach is called more than once
+    fn detach(&mut self);
 
-	/// Detach the daemon from the parent process
-	/// with a custom message to be printed to stdout before detaching
-	///
-	/// # panics
-	/// if detach_with_msg is called more than once
-	fn detach_with_msg<T: AsRef<[u8]>>(&mut self, msg: T);
+    /// Detach the daemon from the parent process
+    /// with a custom message to be printed to stdout before detaching
+    ///
+    /// # panics
+    /// if detach_with_msg is called more than once
+    fn detach_with_msg<T: AsRef<[u8]>>(&mut self, msg: T);
 }
 
 #[macro_export]
 macro_rules! map_err {
-	($e:expr, $err:expr) => {
-		match $e {
-			-1 => {
-				Err::<_, crate::error::Error>(From::from($err))
-			}
-			other => Ok(other),
-		}
-	};
+    ($e:expr, $err:expr) => {
+        match $e {
+            -1 => Err::<_, crate::error::Error>(From::from($err)),
+            other => Ok(other),
+        }
+    };
 }
 
 /// this will fork the calling process twice and return a handle to the
@@ -69,5 +67,5 @@ macro_rules! map_err {
 /// piped to the parent process' STDOUT/STDERR, this way any errors encountered by the
 /// daemon during start up is reported.
 pub fn daemonize<T: Into<PathBuf>>(pid_file: T) -> Result<impl AsHandle> {
-	platform::daemonize(pid_file)
+    platform::daemonize(pid_file)
 }
